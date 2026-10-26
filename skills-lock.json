@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "define-spec": {
+      "source": "../cms-matrix/skill-workspace/main",
+      "sourceType": "local",
+      "computedHash": "847538166cd3d979694876e9ad1f9678a6e89bd0445b3478376b40f905363316"
+    }
+  }
+}

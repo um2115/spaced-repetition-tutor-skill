@@ -1,0 +1,15 @@
+[tools]
+python = "3.14"
+uv = "0.12"
+
+[tasks."check:docs"]
+description = "Check AGENTS.md rules 3, 4 and 7"
+run = "python3 scripts/check_docs.py"
+
+[tasks."check:data"]
+description = "Validate the YAML question files in migrations/"
+run = "uv run --locked python -m migrations.schema.check"
+
+[tasks.test]
+description = "Run the pytest tests"
+run = "uv run --locked pytest"
