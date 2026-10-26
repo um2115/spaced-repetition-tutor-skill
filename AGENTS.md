@@ -58,6 +58,8 @@ lets git be the single source of truth.
   question file loader, and `shared/` building blocks. Tests live in `migrations/schema/tests/`.
 - `.agents/spaced-repetition-tutor` - the skill which can be uploaded to the ai agent
 - `scripts/` — repository tooling.
+- `docs/data-schema.md` — hand-written reference of the sheet tabs and YAML question files, for
+  people and the tutor agent. It must stand alone: no relative links to other repository files.
 - `docs/specs/<n>-<name>/task.md` — numbered specs. Work a spec defers to later goes into
   `docs/specs/todos.md`.
 
@@ -75,4 +77,6 @@ user. If an item cannot be met, say which one and why instead of reporting the s
 
 - The requested change is implemented.
 - `mise run test` and `mise run check:data` pass.
+- A change to `migrations/schema/` updates `docs/data-schema.md` in the same step, and a change to
+  `docs/data-schema.md` updates `migrations/schema/` to match.
 - `AGENTS.md` and the affected instruction files reflect it (rule 1).

@@ -76,15 +76,15 @@ columns exist, which ones are required, and who may write what.
 
 ## Acceptance criteria
 
-- [ ] Every tab, column and config key in `migrations/schema/` appears in `docs/data-schema.md`
+- [x] Every tab, column and config key in `migrations/schema/` appears in `docs/data-schema.md`
       with the same name, type, required flag and default, and the page names no column the code
       lacks.
-- [ ] The YAML example on the page, saved as a file in `migrations/`, passes
+- [x] The YAML example on the page, saved as a file in `migrations/`, passes
       `mise run check:data`.
-- [ ] A hand-editor who knows only spreadsheets can add a valid question row and retire one using
+- [x] A hand-editor who knows only spreadsheets can add a valid question row and retire one using
       this page alone.
-- [ ] `README.md` links to `docs/data-schema.md`, and no schema `<TODO>` remains.
-- [ ] `AGENTS.md` has the Definition of done item that ties `migrations/schema/` and
+- [x] `README.md` links to `docs/data-schema.md`, and no schema `<TODO>` remains.
+- [x] `AGENTS.md` has the Definition of done item that ties `migrations/schema/` and
       `docs/data-schema.md` together.
-- [ ] `mise run check:docs` passes.
-- [ ] No unresolved placeholders or TODOs on the page.
+- [x] `mise run check:docs` passes.
+- [x] No unresolved placeholders or TODOs on the page.

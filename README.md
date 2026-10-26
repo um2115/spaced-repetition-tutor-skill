@@ -40,7 +40,7 @@ different MCP servers. The data can be managed in two ways:
 
 You can simply write/update the document by hand or let the agent do it.
 The only constraint is that each entry must be compliant to the schema defined
-in <TODO>
+in [the data schema](docs/data-schema.md).
 
 ### Managing data via migration
 
