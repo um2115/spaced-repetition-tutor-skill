@@ -1,7 +1,7 @@
 # Data schema
 
 The spaced repetition tutor keeps its questions and review history in one Google Sheets document
-with four tabs, and its question source in YAML files. This page describes every tab, column and
+with six tabs, and its question source in YAML files. This page describes every tab, column and
 format, and says who may write what. It is for people who edit the sheet by hand, people who
 write YAML question files, and the tutor agent.
 
@@ -11,10 +11,12 @@ One sheet belongs to one learner, so no tab has a learner column.
 
 | Tab | Holds | Written by |
 | --- | --- | --- |
-| `questions` | one row per question | migrations or by hand; the agent only reads it |
-| `state` | the FSRS review state, one row per reviewed question | the agent only |
-| `log` | one row per answer attempt | the agent only, and only by appending |
-| `config` | tutor settings as `key`/`value` rows | by hand or migrations; the agent only reads it |
+| `questions` | one row per question | the migration script or by hand; the agent only reads it |
+| `state` | the FSRS review state, one row per reviewed question | the agent; migration steps may change it |
+| `log` | one row per answer attempt | the agent, only by appending; migration steps may change it |
+| `config` | tutor settings as `key`/`value` rows | by hand or the migration script; the agent only reads it |
+| `migrations` | one row per applied migration step | the migration script only |
+| `managed_questions` | the questions the migration script owns | the migration script only |
 
 Rules for every tab:
 
@@ -22,7 +24,8 @@ Rules for every tab:
   this order. Data starts in row 2.
 - A row has no more cells than the tab has columns. Empty cells at the end of a row are fine.
 - Cell values follow the [formats](#formats) below.
-- The tab names are exactly `questions`, `state`, `log` and `config`.
+- The tab names are exactly `questions`, `state`, `log`, `config`, `migrations` and
+  `managed_questions`.
 
 ## Tab: `questions`
 
@@ -43,10 +46,15 @@ One row per question. Columns in this order:
 The tutor asks only active questions. Never change the `id` of a question that has been reviewed:
 its `state` and `log` rows refer to it by `id`.
 
+A question whose `id` is listed in [`managed_questions`](#tab-managed_questions) is managed: it
+comes from a YAML question file, and the migration script overwrites its row whenever the row
+differs from the YAML. Any other row is unmanaged: it was added by hand, and the migration script
+neither changes nor validates it, unless a YAML question with the same `id` takes it over.
+
 ## Tab: `state`
 
-The FSRS review state of each question. The agent writes it; nobody else does, and migrations
-never touch it. A question gets its row when the agent reviews it for the first time, so a
+The FSRS review state of each question. The agent writes it; nobody else does, except a numbered
+migration step that changes the schema. A question gets its row when the agent reviews it for the first time, so a
 question without a row here is new. Columns in this order:
 
 | Column | Type | Required | Default | Rule |
@@ -71,7 +79,7 @@ question without a row here is new. Columns in this order:
 ## Tab: `log`
 
 One row per answer attempt. The agent only appends rows: it never changes or deletes one, and
-neither should anybody else. Columns in this order:
+neither should anybody else, except a numbered migration step that changes the schema. Columns in this order:
 
 | Column | Type | Required | Rule |
 | --- | --- | --- | --- |
@@ -96,7 +104,7 @@ default, an unknown key is an error, and a key may appear only once.
 
 | Key | Type | Default | Rule |
 | --- | --- | --- | --- |
-| `schema_version` | integer | `1` | `1` or more; the version of this schema the sheet follows |
+| `schema_version` | integer | `1` | `1` or more; the version of this schema the sheet follows. The migration script sets it; do not change it by hand |
 | `desired_retention` | float | `0.9` | greater than `0` and less than `1`; the share of reviews the learner should get right |
 | `fsrs_weights` | list of floats | the FSRS-6 default parameters (below) | [list](#lists) of exactly 21 numbers |
 
@@ -107,6 +115,29 @@ The default `fsrs_weights` are the FSRS-6 default parameters of py-fsrs 6.3.2:
 ```
 
 A key that is present needs a valid value; leave the row out to get the default.
+
+## Tab: `migrations`
+
+One row per migration step the migration script has applied to the sheet, in the order they were
+applied. Only the migration script writes this tab. Columns in this order:
+
+| Column | Type | Required | Rule |
+| --- | --- | --- | --- |
+| `version` | integer | yes | the schema version the step brought the sheet to, `2` or more |
+| `name` | string | yes | not empty; the step's name |
+| `applied_at` | timestamp | yes | when the step was applied |
+
+A new sheet starts at schema version `1`, which needs no step, so this tab starts empty.
+
+## Tab: `managed_questions`
+
+The questions the migration script owns: one row per question it wrote from a YAML question file.
+Only the migration script writes this tab. Columns in this order:
+
+| Column | Type | Required | Rule |
+| --- | --- | --- | --- |
+| `question_id` | string | yes | the `id` of a row in `questions`; unique in this tab |
+| `source_file` | string | yes | not empty; the path of the YAML question file, relative to the repository root, such as `migrations/questions/git.yaml` |
 
 ## Formats
 
@@ -142,9 +173,9 @@ joined by single hyphens. It matches `^[a-z0-9]+(-[a-z0-9]+)*$`.
 
 ## YAML question files
 
-Migrations keep questions in YAML files in the `migrations/` directory of the repository, so git
-is the single source of truth. Every `*.yaml` file under `migrations/` is a question file, except
-those inside `migrations/schema/`. The file name is free.
+Migrations keep questions in YAML files in the `migrations/questions/` directory of the
+repository, so git is the single source of truth. Every `*.yaml` file under `migrations/questions/`,
+in subdirectories too, is a question file. The file name is free.
 
 Each file holds one topic: a top-level `topic` and a `questions` list.
 
@@ -196,13 +227,27 @@ Each error names the file, the question (by `id`, or by its position in the list
 when it has no usable id) and the field:
 
 ```text
-migrations/git.yaml: question Git-Rebase: field id: String should match pattern '^[a-z0-9]+(-[a-z0-9]+)*$'
-migrations/git.yaml: question Git-Rebase: field explanation: Value error, must not be empty
+migrations/questions/git.yaml: question Git-Rebase: field id: String should match pattern '^[a-z0-9]+(-[a-z0-9]+)*$'
+migrations/questions/git.yaml: question Git-Rebase: field explanation: Value error, must not be empty
 2 error(s) in question files
 ```
 
-The task exits non-zero when there are errors and zero when there are none. A `migrations/`
-directory without question files is valid.
+The task exits non-zero when there are errors and zero when there are none. A
+`migrations/questions/` directory without question files is valid.
+
+### Writing the files into the sheet
+
+`mise run migrate --apply` writes the YAML questions into the `questions` tab, after it has
+checked the files the same way:
+
+- A question whose `id` is not in the sheet is appended, and listed in `managed_questions`.
+- A managed question whose row differs from the YAML is overwritten with the YAML values.
+- A managed question that is no longer in any YAML file is left in the sheet. Retire it with
+  `active: false` instead of deleting it from YAML.
+- An unmanaged row with the `id` of a YAML question is taken over: it gets the YAML values and
+  becomes managed.
+
+Without `--apply`, the task only prints what it would change.
 
 ## Editing by hand
 
@@ -235,7 +280,9 @@ it back to `TRUE` to bring the question back with its history.
   rows refer to them.
 - Don't change the `id` of an existing question.
 - Don't edit the `state` or `log` tabs. The agent owns them.
+- Don't edit the `migrations` or `managed_questions` tabs, or `schema_version` in `config`. The
+  migration script owns them.
 - Don't rename, reorder, add or remove columns or tabs.
 - Don't put commas inside a tag.
-- Don't edit by hand the questions you keep in YAML files. Change the YAML instead, so git stays
-  the single source of truth.
+- Don't edit by hand the questions you keep in YAML files, the managed ones. Change the YAML
+  instead: the next migration overwrites hand edits of managed rows.

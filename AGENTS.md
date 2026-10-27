@@ -47,15 +47,26 @@ lets git be the single source of truth.
 - [uv](https://docs.astral.sh/uv/) manages the Python dependencies in `pyproject.toml`. Commit
   `uv.lock` with every dependency change; the tasks run with `--locked`.
 - `mise run check:docs` — check the documentation rules above.
-- `mise run check:data` — validate every YAML question file in `migrations/`. Pass a directory to
-  check another one.
-- `mise run test` — run the pytest tests.
+- `mise run check:data` — validate every YAML question file in `migrations/questions/`. Pass a
+  directory to check another one.
+- `mise run test` — run the pytest tests. No test touches the network; tests use the fake Sheets
+  client in `migrations/runner/tests/fake_sheets.py`.
+- `mise run migrate` — plan the migration of the Google Sheet; `--apply` creates missing tabs,
+  runs pending steps and syncs the YAML questions. `mise run restore <snapshot>` plans writing a
+  snapshot back; `--apply` writes it. Both read `SRT_SHEET_ID`, `SRT_OAUTH_CLIENT_SECRET` and
+  `SRT_OAUTH_TOKEN` (or `--sheet-id`, `--client-secret`, `--token`). Set them in the gitignored
+  `mise.local.toml`; never commit their values.
 
 ## Layout
 
 - `migrations` - the migration scripts and data to create/update the google sheets
+- `migrations/questions/` — the YAML question files.
+- `migrations/steps/` — numbered migration steps `<nnnn>_<name>.py`, one per schema version.
 - `migrations/schema/` — one module per sheet tab (its models and row mapping), the YAML
   question file loader, and `shared/` building blocks. Tests live in `migrations/schema/tests/`.
+- `migrations/runner/` — the `migrate` and `restore` commands, with their `shared/` building
+  blocks (settings and login, the Sheets client). Tests live in `migrations/runner/tests/`.
+- `snapshots/` — local snapshots of the sheet taken before structural steps; ignored by git.
 - `.agents/spaced-repetition-tutor` - the skill which can be uploaded to the ai agent
 - `scripts/` — repository tooling.
 - `docs/data-schema.md` — hand-written reference of the sheet tabs and YAML question files, for
@@ -66,6 +77,7 @@ lets git be the single source of truth.
 ## Conventions
 
 - [Code structure](docs/instructions/code-structure.md) — before adding or moving a module
+- [Migration steps](docs/instructions/migration-steps.md) — before writing a migration step
 - `README.md` is for people: what the project is, how to use it, how to start contributing. It
   links to `AGENTS.md` for everything else and does not link instruction files (rule 4).
 

@@ -1,6 +1,6 @@
 """Validate every YAML question file: `python -m migrations.schema.check [directory]`.
 
-The directory defaults to `migrations/` next to this package. Prints every error and exits
+The directory defaults to `migrations/questions/`. Prints every error and exits
 non-zero when there are any.
 """
 
@@ -9,11 +9,11 @@ from pathlib import Path
 
 from .questions_file import load_directory
 
-MIGRATIONS = Path(__file__).resolve().parent.parent
+QUESTIONS = Path(__file__).resolve().parent.parent / "questions"
 
 
 def main(argv: list[str]) -> int:
-    root = Path(argv[0]).resolve() if argv else MIGRATIONS
+    root = Path(argv[0]).resolve() if argv else QUESTIONS
     questions, errors = load_directory(root)
     for error in errors:
         print(error, file=sys.stderr)

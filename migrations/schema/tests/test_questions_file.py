@@ -5,8 +5,8 @@ from textwrap import dedent
 
 import pytest
 
-from migrations.schema.check import main
-from migrations.schema.questions_file import load_directory
+from migrations.schema.check import QUESTIONS, main
+from migrations.schema.questions_file import load_directory, load_directory_with_files
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -92,9 +92,22 @@ def test_empty_directory_is_valid(migrations: Path):
     assert main([str(migrations)]) == 0
 
 
-def test_schema_directory_is_skipped(migrations: Path):
-    write(migrations, "schema/fixture.yaml", "not: a question file\n")
-    assert main([str(migrations)]) == 0
+def test_default_directory_is_migrations_questions():
+    assert QUESTIONS == ROOT / "migrations" / "questions"
+
+
+def test_files_are_paired_with_their_path(migrations: Path):
+    kubernetes = write(migrations, "kubernetes.yaml", KUBERNETES)
+    python = write(migrations, "nested/python.yaml", PYTHON)
+
+    sourced, errors = load_directory_with_files(migrations)
+
+    assert errors == []
+    assert {question.id: path for question, path in sourced} == {
+        "k8s-pod-lifecycle": kubernetes,
+        "k8s-service-types": kubernetes,
+        "py-gil": python,
+    }
 
 
 @pytest.mark.parametrize(

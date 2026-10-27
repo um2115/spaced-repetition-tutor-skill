@@ -1,4 +1,4 @@
-"""Load and validate the YAML question files in `migrations/`.
+"""Load and validate the YAML question files in `migrations/questions/`.
 
 Each file holds one topic:
 
@@ -47,9 +47,8 @@ class DataError:
 
 
 def find_question_files(root: Path) -> list[Path]:
-    """Every `*.yaml` file under `root`, except those inside `root/schema`."""
-    schema = root / "schema"
-    return sorted(path for path in root.rglob("*.yaml") if not path.is_relative_to(schema))
+    """Every `*.yaml` file under `root`."""
+    return sorted(root.rglob("*.yaml"))
 
 
 @dataclass(frozen=True)
@@ -110,12 +109,19 @@ def _errors(name: Path, data: dict, error: ValidationError) -> Iterator[DataErro
 
 def load_directory(root: Path) -> tuple[list[Question], list[DataError]]:
     """Load every question file under `root` and collect all errors, including duplicate ids."""
-    questions, errors = [], []
+    sourced, errors = load_directory_with_files(root)
+    return [question for question, _ in sourced], errors
+
+
+def load_directory_with_files(root: Path) -> tuple[list[tuple[Question, Path]], list[DataError]]:
+    """Like `load_directory`, but pairs each question with the absolute path of its file."""
+    questions: list[tuple[Question, Path]] = []
+    errors: list[DataError] = []
     first_seen: dict[str, Path] = {}
     for path in find_question_files(root):
         name = path.relative_to(Path.cwd()) if path.is_relative_to(Path.cwd()) else path
         loaded = load_file(path, name)
-        questions.extend(loaded.questions)
+        questions.extend((question, path) for question in loaded.questions)
         errors.extend(loaded.errors)
         for question_id in loaded.ids:
             if question_id not in first_seen:

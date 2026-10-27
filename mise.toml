@@ -7,9 +7,17 @@ description = "Check AGENTS.md rules 3, 4 and 7"
 run = "python3 scripts/check_docs.py"
 
 [tasks."check:data"]
-description = "Validate the YAML question files in migrations/"
+description = "Validate the YAML question files in migrations/questions/"
 run = "uv run --locked python -m migrations.schema.check"
 
 [tasks.test]
 description = "Run the pytest tests"
 run = "uv run --locked pytest"
+
+[tasks.migrate]
+description = "Migrate the Google Sheet and sync the YAML questions (pass --apply to write)"
+run = "uv run --locked python -m migrations.runner.migrate"
+
+[tasks.restore]
+description = "Write a snapshot back into the Google Sheet (pass --apply to write)"
+run = "uv run --locked python -m migrations.runner.restore"
