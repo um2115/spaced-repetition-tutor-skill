@@ -22,11 +22,92 @@ by explaining you the topic again and answering questions.
 
 ## How to setup
 
-<TO DO> SETUP TASKS
+### What you need
+
+- An AI agent that can **run code** (Python 3.10 or newer, nothing else to
+  install) and has a **Google Sheets connection** (an MCP server or connector
+  that can read and write sheets). Any agent with both works, for example
+  Claude on claude.ai with code execution turned on.
+- A Google Sheet for your questions and review history, set up as described in
+  [the data schema](docs/data-schema.md). The quickest way is to let the
+  migration create the tabs, see
+  [Managing data via migration](#managing-data-via-migration). You can also
+  create the tabs and header rows by hand.
+
+### Install the skill
+
+The skill is the folder `.agents/skills/spaced-repetition-tutor/` in this
+repository. It already contains everything it needs: the instructions, the
+scheduling script and a copy of the data schema.
+
+- **claude.ai:** tell Claude that the GitHub repository at your link holds a
+  skill called `spaced-repetition-tutor` in `.agents/skills/` and that it
+  should install it. Claude then adds it to its skills.
+- **Other agents:** copy or link the folder into the agent's skills directory.
+  Claude Code finds it in this repository already, via
+  `.claude/skills/spaced-repetition-tutor`.
+
+After an update of the repository, install the skill again. Its version is in
+`.agents/skills/spaced-repetition-tutor/VERSION`.
 
 ## Use the skill
 
-<TO DO>
+### Start a session
+
+The tutor never starts on its own. Call it by name, and tell it which sheet to
+use if you have not shared one in the conversation yet:
+
+```text
+/spaced-repetition-tutor
+start the spaced repetition tutor with https://docs.google.com/spreadsheets/d/<id>/edit
+spaced repetition tutor, 10 questions tagged git
+spaced repetition tutor, topic Kubernetes
+```
+
+- **Sheet:** a link, id or title. If you name none and the conversation has
+  no sheet or several, the tutor asks which one to use.
+- **Number of questions:** optional. Without one, the tutor goes on until no
+  question is due.
+- **Tags and topics:** optional. Only questions with one of the named tags, or
+  of one of the named topics, are asked.
+
+A plain "quiz me on git" does not start the tutor; the agent answers it like
+any other request.
+
+### During a session
+
+1. The tutor asks the questions that are due, the most overdue first, then the
+   questions you have never answered.
+2. Answer in your own words. The tutor judges the meaning, not the wording, and
+   rates your answer: **Again** (wrong), **Hard**, **Good** or **Easy**. It
+   shows you the expected answer, the rating and why.
+3. You can discuss the rating or ask about the answer. That helps you, but it
+   does not change the rating.
+4. On a wrong answer the tutor explains the topic until you say it is clear,
+   and asks the question again later in the same session. These repeats do not
+   count toward the number of questions you asked for.
+5. You can stop at any time. Every answer is saved right after it is rated.
+
+At the end the tutor shows a summary: how many questions you answered, their
+ratings, and when the next question is due.
+
+### What the tutor writes
+
+The tutor only writes the `state` tab (when each question is due next) and
+appends to the `log` tab (every answer you gave). It never changes your
+questions or the `config` tab. The scheduling follows
+[FSRS](https://github.com/open-spaced-repetition/py-fsrs): questions you answer
+well come back after longer and longer intervals, questions you get wrong come
+back soon. You can tune it in the `config` tab, see
+[the data schema](docs/data-schema.md).
+
+### When it stops
+
+- **No code execution:** the tutor needs it to schedule reviews and stops.
+- **Schema version mismatch:** the sheet's `schema_version` differs from the
+  one the skill knows. Run the migration or install the current skill.
+- **Invalid `config`:** the tutor names the problem; fix the `config` tab.
+- **Nothing due:** come back later.
 
 ## Data
 
