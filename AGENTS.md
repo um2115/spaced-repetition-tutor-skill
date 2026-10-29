@@ -56,6 +56,9 @@ lets git be the single source of truth.
   snapshot back; `--apply` writes it. Both read `SRT_SHEET_ID`, `SRT_OAUTH_CLIENT_SECRET` and
   `SRT_OAUTH_TOKEN` (or `--sheet-id`, `--client-secret`, `--token`). Set them in the gitignored
   `mise.local.toml`; never commit their values.
+- `mise run build <version>` — update the bundled files of the skill and set its semantic
+  version (equal or higher than the current one). `mise run check:skill` fails when they differ
+  from their sources; `mise run test` runs it too.
 
 ## Layout
 
@@ -69,7 +72,8 @@ lets git be the single source of truth.
 - `snapshots/` — local snapshots of the sheet taken before structural steps; ignored by git.
 - `.agents/skills/spaced-repetition-tutor/` — the tutor skill that agents install from the
   repository; tests of its script live in `scripts/tests/`. `.claude/skills/` links to it for
-  local use.
+  local use. `mise run build` writes its `VERSION`, `SCHEMA_VERSION`, `references/` and
+  `scripts/vendor/fsrs/`; do not edit them by hand.
 - `scripts/` — repository tooling.
 - `docs/data-schema.md` — hand-written reference of the sheet tabs and YAML question files, for
   people and the tutor agent. It must stand alone: no relative links to other repository files.
@@ -91,6 +95,8 @@ user. If an item cannot be met, say which one and why instead of reporting the s
 
 - The requested change is implemented.
 - `mise run test` and `mise run check:data` pass.
+- A change to `docs/data-schema.md`, `migrations/steps/` or the py-fsrs pin runs
+  `mise run build <version>` in the same step, and `mise run check:skill` passes.
 - A change to `migrations/schema/` updates `docs/data-schema.md` in the same step, and a change to
   `docs/data-schema.md` updates `migrations/schema/` to match.
 - `AGENTS.md` and the affected instruction files reflect it (rule 1).

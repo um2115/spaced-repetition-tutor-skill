@@ -24,4 +24,5 @@ testpaths = [
     "migrations/schema/tests",
     "migrations/runner/tests",
     ".agents/skills/spaced-repetition-tutor/scripts/tests",
+    "scripts/tests",
 ]

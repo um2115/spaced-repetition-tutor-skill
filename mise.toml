@@ -21,3 +21,11 @@ run = "uv run --locked python -m migrations.runner.migrate"
 [tasks.restore]
 description = "Write a snapshot back into the Google Sheet (pass --apply to write)"
 run = "uv run --locked python -m migrations.runner.restore"
+
+[tasks.build]
+description = "Build the spaced-repetition-tutor skill in place with the given version"
+run = "uv run --locked python -m scripts.build_skill build"
+
+[tasks."check:skill"]
+description = "Check that the skill's bundled files match their sources"
+run = "uv run --locked python -m scripts.build_skill check"
