@@ -10,11 +10,18 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest==9.1.1"]
+dev = [
+    "fsrs==6.3.2",
+    "pytest==9.1.1",
+]
 
 [tool.uv]
 package = false
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["migrations/schema/tests", "migrations/runner/tests"]
+testpaths = [
+    "migrations/schema/tests",
+    "migrations/runner/tests",
+    ".agents/skills/spaced-repetition-tutor/scripts/tests",
+]

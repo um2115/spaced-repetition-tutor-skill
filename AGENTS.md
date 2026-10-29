@@ -67,7 +67,9 @@ lets git be the single source of truth.
 - `migrations/runner/` — the `migrate` and `restore` commands, with their `shared/` building
   blocks (settings and login, the Sheets client). Tests live in `migrations/runner/tests/`.
 - `snapshots/` — local snapshots of the sheet taken before structural steps; ignored by git.
-- `.agents/spaced-repetition-tutor` - the skill which can be uploaded to the ai agent
+- `.agents/skills/spaced-repetition-tutor/` — the tutor skill that agents install from the
+  repository; tests of its script live in `scripts/tests/`. `.claude/skills/` links to it for
+  local use.
 - `scripts/` — repository tooling.
 - `docs/data-schema.md` — hand-written reference of the sheet tabs and YAML question files, for
   people and the tutor agent. It must stand alone: no relative links to other repository files.

@@ -2,7 +2,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Annotated, Any
 
 from pydantic import Field, ValidationError
 
@@ -25,6 +25,11 @@ class Config(Model):
     fsrs_weights: list[float] = Field(
         default=list(DEFAULT_FSRS_WEIGHTS), min_length=21, max_length=21
     )
+    # The scheduler settings of py-fsrs 6.3.2, with its defaults; steps are in minutes.
+    learning_steps: list[Annotated[float, Field(gt=0)]] = Field(default=[1.0, 10.0])
+    relearning_steps: list[Annotated[float, Field(gt=0)]] = Field(default=[10.0])
+    maximum_interval: int = Field(default=36500, ge=1)
+    enable_fuzzing: bool = True
 
 
 @dataclass(frozen=True)
@@ -72,5 +77,9 @@ CONFIG = ConfigTab(
         Column("schema_version", cells.format_int, cells.parse_int),
         Column("desired_retention", cells.format_float, cells.parse_float),
         Column("fsrs_weights", cells.format_float_list, cells.parse_float_list),
+        Column("learning_steps", cells.format_float_list, cells.parse_float_list),
+        Column("relearning_steps", cells.format_float_list, cells.parse_float_list),
+        Column("maximum_interval", cells.format_int, cells.parse_int),
+        Column("enable_fuzzing", cells.format_bool, cells.parse_bool),
     ),
 )

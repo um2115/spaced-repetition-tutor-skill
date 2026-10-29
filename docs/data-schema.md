@@ -107,12 +107,21 @@ default, an unknown key is an error, and a key may appear only once.
 | `schema_version` | integer | `1` | `1` or more; the version of this schema the sheet follows. The migration script sets it; do not change it by hand |
 | `desired_retention` | float | `0.9` | greater than `0` and less than `1`; the share of reviews the learner should get right |
 | `fsrs_weights` | list of floats | the FSRS-6 default parameters (below) | [list](#lists) of exactly 21 numbers |
+| `learning_steps` | list of floats | `1,10` | [list](#lists) of minutes, each greater than `0`; the short steps of a question being learned for the first time. An empty cell means no steps |
+| `relearning_steps` | list of floats | `10` | [list](#lists) of minutes, each greater than `0`; the short steps of a forgotten question. An empty cell means no steps |
+| `maximum_interval` | integer | `36500` | `1` or more; the most days a question can be scheduled into the future |
+| `enable_fuzzing` | boolean | `TRUE` | [boolean](#booleans); `TRUE` adds a little random spread to long intervals so questions learned together do not stay due together |
 
 The default `fsrs_weights` are the FSRS-6 default parameters of py-fsrs 6.3.2:
 
 ```text
 0.212,1.2931,2.3065,8.2956,6.4133,0.8334,3.0194,0.001,1.8722,0.1666,0.796,1.4835,0.0614,0.2629,1.6483,0.6014,1.8729,0.5425,0.0912,0.0658,0.1542
 ```
+
+The defaults of `learning_steps`, `relearning_steps`, `maximum_interval` and `enable_fuzzing` are
+the scheduler defaults of py-fsrs 6.3.2. The tutor's scheduler also rejects `fsrs_weights`
+outside the bounds py-fsrs allows for each parameter, so change them only to weights an FSRS
+optimizer produced.
 
 A key that is present needs a valid value; leave the row out to get the default.
 
@@ -154,7 +163,8 @@ decimal separator, such as `0.9`.
 
 ### Lists
 
-`tags` and `fsrs_weights` hold lists as comma-separated values in one cell, for example
+`tags`, `fsrs_weights`, `learning_steps` and `relearning_steps` hold lists as comma-separated
+values in one cell, for example
 `pods,basics`. Whitespace around each item is ignored, so `pods, basics` is the same list. An
 empty cell is an empty list.
 
